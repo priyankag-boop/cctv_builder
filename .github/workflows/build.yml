@@ -22,11 +22,16 @@ jobs:
         run: |
           curl -L -o ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
           powershell -command "Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_temp"
-          # Move only required EXEs
+
+          # Find the actual extracted FFmpeg folder (e.g., ffmpeg-7.1-essentials_build)
+          $folder = Get-ChildItem -Directory ffmpeg_temp | Select-Object -First 1
+
           mkdir ffmpeg
-          copy ffmpeg_temp\ffmpeg-* \bin\ffmpeg.exe ffmpeg\
-          copy ffmpeg_temp\ffmpeg-* \bin\ffprobe.exe ffmpeg\
-          copy ffmpeg_temp\ffmpeg-* \bin\ffplay.exe ffmpeg\
+
+          Copy-Item "$folder\bin\ffmpeg.exe" ffmpeg/
+          Copy-Item "$folder\bin\ffprobe.exe" ffmpeg/
+          Copy-Item "$folder\bin\ffplay.exe" ffmpeg/
+
 
       - name: Install PyInstaller
         run: pip install pyinstaller
