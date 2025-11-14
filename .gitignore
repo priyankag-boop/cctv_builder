@@ -1,13 +1,22 @@
-# Python
-__pycache__/
-*.pyc
-
-# PyInstaller
-build/
-dist/
+# PyInstaller build output
+/build/
+/dist/
+/__pycache__/
 *.spec
 
-# FFmpeg (downloaded in Actions only)
+# Temporary files
+*.log
+*.tmp
+
+# FFmpeg downloaded during CI
 ffmpeg/
-ffmpeg_unpack/
+ffmpeg_temp/
 ffmpeg.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python virtual environment
+venv/
+env/
