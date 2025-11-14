@@ -2,7 +2,7 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -13,39 +13,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Download FFmpeg (64-bit)
+      - name: Install dependencies
         run: |
-          curl -L -o ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
-          powershell -command "Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_temp"
+          pip install pyinstaller requests
 
-          # Find the actual extracted FFmpeg folder (e.g., ffmpeg-7.1-essentials_build)
-          $folder = Get-ChildItem -Directory ffmpeg_temp | Select-Object -First 1
-
-          mkdir ffmpeg
-
-          Copy-Item "$folder\bin\ffmpeg.exe" ffmpeg/
-          Copy-Item "$folder\bin\ffprobe.exe" ffmpeg/
-          Copy-Item "$folder\bin\ffplay.exe" ffmpeg/
-
-
-      - name: Install PyInstaller
-        run: pip install pyinstaller
-
-      - name: Build one-file EXE
+      - name: Download FFmpeg
         run: |
-          pyinstaller --onefile --noconsole ^
-            --add-binary "ffmpeg/ffmpeg.exe;ffmpeg" ^
-            --add-binary "ffmpeg/ffprobe.exe;ffmpeg" ^
-            --add-binary "ffmpeg/ffplay.exe;ffmpeg" ^
+          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" -OutFile "ffmpeg.zip"
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_extract
+          New-Item -ItemType Directory -Path ffmpeg
+          Copy-Item "ffmpeg_extract\ffmpeg-*\\bin\\*.exe" -Destination "ffmpeg" -Recurse
+
+      - name: Build EXE
+        shell: pwsh
+        run: |
+          pyinstaller `
+            --onefile `
+            --noconsole `
+            --add-binary "ffmpeg/ffmpeg.exe;ffmpeg" `
+            --add-binary "ffmpeg/ffprobe.exe;ffmpeg" `
+            --add-binary "ffmpeg/ffplay.exe;ffmpeg" `
             cctv.py
 
-      - name: Upload EXE Artifact
+      - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
-          name: CCTV-Streamer
-          path: dist/cctv.exe
+          name: cctv_exe
+          path: dist/*.exe
