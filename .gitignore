@@ -1,5 +1,13 @@
-dist/
-build/
+# Python
 __pycache__/
+*.pyc
+
+# PyInstaller
+build/
+dist/
 *.spec
+
+# FFmpeg (downloaded in Actions only)
 ffmpeg/
+ffmpeg_unpack/
+ffmpeg.zip

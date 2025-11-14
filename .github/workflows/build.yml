@@ -1,0 +1,48 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # Checkout Repo
+      - name: Checkout repository
+      - uses: actions/checkout@v4
+
+      # Install Python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      # Download FFmpeg (static build)
+      - name: Download FFmpeg
+        run: |
+          curl -L -o ffmpeg.zip https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+          powershell -Command "Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_unpack"
+          mkdir ffmpeg
+          copy ffmpeg_unpack\*\bin\ffmpeg.exe ffmpeg\
+          copy ffmpeg_unpack\*\bin\ffprobe.exe ffmpeg\
+
+      # Install dependencies
+      - name: Install dependencies
+        run: pip install pyinstaller
+
+      # Build EXE
+      - name: Build EXE using PyInstaller
+        run: pyinstaller --onefile --noconsole `
+              --add-binary "ffmpeg/ffmpeg.exe;ffmpeg" `
+              --add-binary "ffmpeg/ffprobe.exe;ffmpeg" `
+              cctv.py
+
+      # Upload Artifact
+      - name: Upload EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: cctv-streamer
+          path: dist/*.exe
